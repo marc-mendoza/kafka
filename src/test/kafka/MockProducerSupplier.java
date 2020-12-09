@@ -10,7 +10,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Supplier;
 
-public class MockProducerSupplier<K, V> implements Supplier<Producer<K, V>> {
+public class MockProducerSupplier<K, V> implements Supplier<Producer<K, V>>, ProducerSupplier {
     private static final Logger logger = LoggerFactory.getLogger(MockProducerSupplier.class);
     Queue<MockProducer> globalQueue = new ConcurrentLinkedDeque<>();
 
@@ -24,5 +24,10 @@ public class MockProducerSupplier<K, V> implements Supplier<Producer<K, V>> {
 
     public long getCountSentMessages() {
         return globalQueue.stream().mapToInt(p -> p.history().size()).sum();
+    }
+
+    @Override
+    public int getProducerCount() {
+        return globalQueue.size();
     }
 }

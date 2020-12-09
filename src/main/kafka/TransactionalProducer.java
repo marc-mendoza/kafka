@@ -11,12 +11,11 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.Future;
 import java.util.function.Supplier;
 
 public class TransactionalProducer<K, V> implements Producer<K, V> {
-    private final static Logger LOGGER = LoggerFactory.getLogger("console");
+    private final static Logger LOGGER = LoggerFactory.getLogger(TransactionalProducer.class);
     private final static ThreadLocal<Producer> localProducer = new ThreadLocal<>();
     private final Supplier<Producer> producerSupplier;
 

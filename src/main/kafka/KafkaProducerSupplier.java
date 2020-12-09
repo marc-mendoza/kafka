@@ -9,7 +9,7 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
-public class KafkaProducerSupplier<K, V> implements Supplier<Producer<K, V>> {
+public class KafkaProducerSupplier<K, V> implements Supplier<Producer<K, V>>, ProducerSupplier {
     private static final Logger logger = LoggerFactory.getLogger("console");
     private static final String TRANSACTIONAL_ID = "transactional.id";
     private final AtomicInteger producerCount = new AtomicInteger(0);
@@ -27,5 +27,10 @@ public class KafkaProducerSupplier<K, V> implements Supplier<Producer<K, V>> {
         logger.info("Creating new KafkaProducer with transactionalId: {}", id);
         properties.setProperty(TRANSACTIONAL_ID, id);
         return new KafkaProducer<>(properties);
+    }
+
+    @Override
+    public int getProducerCount() {
+        return producerCount.get();
     }
 }
