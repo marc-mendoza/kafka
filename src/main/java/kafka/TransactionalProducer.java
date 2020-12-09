@@ -20,14 +20,9 @@ public class TransactionalProducer<K, V> implements Producer<K, V> {
     private final static ThreadLocal<Producer> localProducer = new ThreadLocal<>();
     private final Supplier<Producer> producerSupplier;
 
-    public TransactionalProducer(Properties properties) {
-        this.producerSupplier = new KafkaProducerSupplier(properties);
-        LOGGER.info("Creating TransactionalProducer with default Supplier<Producer>...");
-    }
-
     public TransactionalProducer(Supplier<Producer> producerSupplier) {
+        LOGGER.info("Creating TransactionalProducer...");
         this.producerSupplier = producerSupplier;
-        LOGGER.info("Creating TransactionalProducer with custom Supplier<Producer>...");
     }
 
     private Producer producer() {

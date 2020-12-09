@@ -26,7 +26,7 @@ import java.util.concurrent.Executors;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class KafkaTest {
-    private final static Logger logger = LoggerFactory.getLogger("console");
+    private final static Logger logger = LoggerFactory.getLogger(KafkaTest.class);
     private final static int MESSAGE_COUNT = 1000;
     private final static int THREAD_COUNT = 5;
     private final static int TASK_COUNT = 50;
@@ -36,10 +36,6 @@ public class KafkaTest {
 
     private String topicName;
 
-    /**
-     * This happens once before every test method.
-     * Create a new empty namespace with randomly generated name.
-     */
     @Before
     public void beforeTest() {
         // Generate topic name
@@ -54,8 +50,33 @@ public class KafkaTest {
     public void testTransactionalProducer() {
         final KafkaTestUtils kafkaTestUtils = sharedKafkaTestResource.getKafkaTestUtils();
 
-        final TransactionalProducer transactionalProducer = new TransactionalProducer(createOverridingProducerTransactionalProperties());
+        final TransactionalProducer transactionalProducer = new TransactionalProducer(new KafkaProducerSupplier<>(createOverridingProducerTransactionalProperties()));
 
+        sendMessages(transactionalProducer);
+
+        final List<ConsumerRecord<byte[], byte[]>> consumerRecords = kafkaTestUtils.consumeAllRecordsFromTopic(topicName);
+
+        logger.info("consumer record count: {}", consumerRecords.size());
+
+        assertThat(consumerRecords.size() == TASK_COUNT * MESSAGE_COUNT);
+    }
+
+    @Test
+    public void testTransactionalProducerWithMockSupplier() {
+        final KafkaTestUtils kafkaTestUtils = sharedKafkaTestResource.getKafkaTestUtils();
+
+        final TransactionalProducer transactionalProducer = new TransactionalProducer(new MockProducerSupplier<>());
+
+        sendMessages(transactionalProducer);
+
+        final List<ConsumerRecord<byte[], byte[]>> consumerRecords = kafkaTestUtils.consumeAllRecordsFromTopic(topicName);
+
+        logger.info("consumer record count: {}", consumerRecords.size());
+
+        assertThat(consumerRecords.size() == 0);
+    }
+
+    private void sendMessages(TransactionalProducer transactionalProducer) {
         try {
             ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
             CountDownLatch latch = new CountDownLatch(TASK_COUNT);
@@ -65,12 +86,6 @@ public class KafkaTest {
         } catch (InterruptedException e) {
             logger.error("error: {}", e.getMessage());
         }
-
-        final List<ConsumerRecord<byte[], byte[]>> consumerRecords = kafkaTestUtils.consumeAllRecordsFromTopic(topicName);
-
-        logger.info("consumer record count: {}", consumerRecords.size());
-
-        assertThat(consumerRecords.size() == TASK_COUNT * MESSAGE_COUNT);
     }
 
     private List<Callable<Void>> getCallables(Integer callableCount, TransactionalProducer transactionalProducer, CountDownLatch latch) {
